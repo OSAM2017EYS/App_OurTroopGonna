@@ -1,0 +1,15 @@
+{
+  "name": "weeklyschedule",
+  "version": "1.0.0",
+  "description": "osam2017 eo yoo seon",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "eo yoo seon",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.2",
+    "moment": "^2.19.1"
+  }
+}
