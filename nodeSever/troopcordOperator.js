@@ -60,7 +60,12 @@ function setInfoByName(username,info,callback)
 		fileLocation += '/'+ username+'.json';
 	
 		fs.writeFile(fileLocation,info,function(err){
-			if(err) return callback(false);
+			if(err)
+				{
+					console.log('oh.... stream...');
+					return callback(false);
+				}
+			console.log("Yap");
 			return callback(true);
 		});
 	});
@@ -104,12 +109,16 @@ function isInUDRelation(highcode,lowcode,callback)
 			if(spLow[i] === spHigh[i]) //low가 high의 소속을 따라가는지 확인하다가.
 				continue;
 			else if(spHigh[i] === '000' || spHigh[i] === '00' || spHigh[i] === '0')
+				{
 				//high가 참모부면 true 반환
+				console.log("Ya Im your boss");
 				return callback(true);
-			
-		
-			return callback(false);
+				}
 		}
+
+	console.log("Im not");
+	return callback(false);
+		
 	
 }
 

@@ -44,7 +44,7 @@ var savePath = 'D://nodetutorial//express_test//upload//';
 var isFormData = function(req) {
     var type = req.headers['content-type'] || '';
     return 0 == type.indexOf('multipart/form-data');
-}
+};
 
 app.post('/upload', function(req, res) {
     var form = new formidable.IncomingForm();

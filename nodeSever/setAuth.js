@@ -63,6 +63,7 @@ function checkHorRelation(solNumber,targetUser,callback)
 	tco.getInfoByName(solNumber,function(data){
 		if(JSON.parse(data)['admin'] === 'Y')
 		{
+			console.log("UD rel");
 			tco.getCode(solNumber,function(data){
 				
 				var userCode = data;
@@ -93,15 +94,17 @@ function checkUDRelation(solNumber,targetUser,callback)
 	tco.getInfoByName(solNumber,function(data){
 		if(JSON.parse(data)['admin'] === 'Y')
 		{
+			console.log('you are admin');
 			tco.getCode(solNumber,function(data){
 				
 				var userCode = data;
-
+				console.log(userCode);
 				tco.getCode(targetUser,function(data){
 					
 					var targetCode = data;
-					
+					console.log(targetCode);
 					tco.isInUDRelation(userCode,targetCode,function(judge){
+						console.log(judge);
 						return callback(judge);
 					});
 				});
@@ -135,23 +138,62 @@ function getMyInfo(user,callback)
 
 }
 
-function setSecretHandle(user,level,callback)
+function setSecretHandle(user,target,level,callback)
 {
-	tco.getInfoByName(user,function(data)
-		{
-			jsonObj=JSON.parse(data);
-			jsonObj['secretLevel']=level;
-
-			var jsonString = JSON.stringify(jsonObj);
-					tco.setInfoByName(targetUser,jsonString,function(value)
-									  {
-						
-						return callback(value);
-									
-									  });
-		});
-}
 	
+	checkUDRelation(user,target,function(judge){
+		if(judge)
+			{
+				console.log("UD rel");
+				tco.getInfoByName(target,function(data)
+								  {
+					jsonObj=JSON.parse(data);
+					jsonObj['secretLevel']=level;
+
+					var jsonString = JSON.stringify(jsonObj);
+							tco.setInfoByName(targetUser,jsonString,function(value)
+											  {
+
+								return callback(value);
+
+											  });
+				});
+			}
+		else
+			{
+				checkHorRelation(user,target,function(judge)
+								{
+					console.log("Hor rel");
+			
+					if(judge)
+					{
+		
+						tco.getInfoByName(target,function(data)
+										  {
+							jsonObj=JSON.parse(data);
+							jsonObj['secretLevel']=level;
+
+							var jsonString = JSON.stringify(jsonObj);
+									tco.setInfoByName(target,jsonString,function(value)
+													  {
+										console.log(value);
+										
+										return callback(value);
+
+													  });
+						});
+					}
+					else 
+					{
+						console.log("No rel");
+						return callback(false);
+					}
+				});
+			}
+	});
+	
+}
+
 
 exports.setSecretHandle = setSecretHandle;
 exports.getMyInfo=getMyInfo;

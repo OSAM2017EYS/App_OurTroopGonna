@@ -13,16 +13,66 @@ function signUp(solNumber,password,troopcode,realName,callback){
 		if(err) throw err;
 	
 		var parsedOriginal = JSON.parse(data);
+		if(parsedOriginal[solNumber] !== undefined) // 이미 등록한 사용자인 경우 등록하지 않는다.
+			return callback(false);
+		else
+			{
 		parsedOriginal[solNumber]=[password,troopcode,realName];
 		var finalData = JSON.stringify(parsedOriginal);
 	
 		fs.writeFile('./account.json',finalData,function(err,data){
 			if(err) throw err;
+			//디렉토리를 만들기 위해 split한다.
+	
+			var splitedcode = tco.splitCord(troopcode);
+			var fileLocation = './accounts';//이 디렉토리는 이미 정해져있다.
+			for(var i = 0;i<5;i++)	//부대코드는 5단계로 구성
+				{
+					fileLocation+='/'+splitedcode[i];
+
+					if((fs.existsSync(fileLocation)) === false)
+
+					//디렉토리가 존재하지 않는다면 디렉토리를 만들어준다.
+					//exists는 syncronous하게 가자 그러지 않으면 exists가 완료되기 전에 이터레이터가 먼저 넘어간다.
+					{
+
+						console.log(fileLocation);
+						fs.mkdirSync(fileLocation);
+					}
+					if(splitedcode[i] === '0' || splitedcode[i] === '00' || splitedcode[i] === '000')
+						//참모부면 중단
+						break;
+				}
+			//마지막으로 파일명을 입혀주면 끝
+			fileLocation += '/'+ solNumber+'.json';
+
+
+
+			//정보들의 초기값 설정
+			var accountString = '{}';
+			var accountData = JSON.parse(accountString);
+			accountData['section']='No Section';
+			accountData['admin']='N';
+			accountData['secretLevel'] = '4';
+			//secret Level 1 -> 1급 비취, 2->2급, 3->3급, 4->대외비
+
+			fs.writeFile(fileLocation,JSON.stringify(accountData),function(err){
+					if(err) throw err;
+					return callback(true);
+				
+			});
 			
 		});
 		
+	
+			}
+
+			
 	});
 	
+}
+
+exports.signUp=signUp;
 	
 	//먼저 account.json에 군번,비밀번호,부대번호를 넣는다
 	
@@ -42,46 +92,7 @@ function signUp(solNumber,password,troopcode,realName,callback){
 	
 	
 	
-	//디렉토리를 만들기 위해 split한다.
-	var splitedcode = tco.splitCord(troopcode);
-	var fileLocation = './accounts';//이 디렉토리는 이미 정해져있다.
-	for(var i = 0;i<5;i++)	//부대코드는 5단계로 구성
-		{
-			fileLocation+='/'+splitedcode[i];
-			
-			if((fs.existsSync(fileLocation)) === false)
-			
-			//디렉토리가 존재하지 않는다면 디렉토리를 만들어준다.
-			//exists는 syncronous하게 가자 그러지 않으면 exists가 완료되기 전에 이터레이터가 먼저 넘어간다.
-			{
-			
-				console.log(fileLocation);
-				fs.mkdirSync(fileLocation);
-			}
-			if(splitedcode[i] === '0' || splitedcode[i] === '00' || splitedcode[i] === '000')
-				//참모부면 중단
-				break;
-		}
-	//마지막으로 파일명을 입혀주면 끝
-	fileLocation += '/'+ solNumber+'.json';
 	
-	
-	
-	//정보들의 초기값 설정
-	var accountString = '{}';
-	var accountData = JSON.parse(accountString);
-	accountData['section']='';
-	accountData['admin']='N';
-	accountData['secretLevel'] = '4';
-	//secret Level 1 -> 1급 비취, 2->2급, 3->3급, 4->대외비
-
-	fs.writeFile(fileLocation,JSON.stringify(accountData),function(err){
-			if(err) throw err;
-			return callback();
-		});
-}
-
-exports.signUp=signUp;
 
 //signUp('justDoIt','kjo','1 20 032 999 922',function(){console.log('just did it!');});
 

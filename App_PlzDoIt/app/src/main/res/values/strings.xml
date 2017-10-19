@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">App_PlzDoIt</string>
+    <string name="serverhost">https://makkiato.run.goorm.io/</string>
+</resources>

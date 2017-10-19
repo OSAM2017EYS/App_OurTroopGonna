@@ -43,7 +43,8 @@ function signIn(username,password,callback){
 				}
 			else break;
 		}
-		
+		console.log(username+' is not here');
+		return callback(false,null);
 	});
 	
 }

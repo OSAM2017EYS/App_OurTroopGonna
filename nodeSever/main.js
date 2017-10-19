@@ -1,7 +1,7 @@
 var express = require('express');
 var app = express();
 var bp = require('body-parser');
-
+var gt = require('./getTimes.js');
 var si = require('./signIn.js');
 var su = require('./signUp.js');
 var sa = require('./setAuth.js');
@@ -14,50 +14,61 @@ var ms = require('./manageSchedule.js');
 실제로 할 때는 sync와 async를 적절히 사용해보자. 이를테면, 파일을 쓰는거는 sync로 하는게 안전하겠지?
 특히 stream을 다루는 법을 좀 더 공부했으면 좋겠다. 
 */
-app.use(bp.urlencoded({extended: false}));
 
+
+
+app.use(bp.json()); // for parsing application/json
+app.use(bp.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
 //사용자 등록 포트 리스닝 
-var SignUpConnect = express();
-app.get('/SU', function(req, res){
+app.post('/SU', function(req, res){
 
 	console.log('we got req');
-	var user = req.query.user.toString();
-	var pw = req.query.pw.toString();
-	var troop = req.query.troop.toString().trim();
-	var name = req.query.name.toString();
+	console.log(req.body);
+	var user = req.body.user;
+	
+	var pw = req.body.pw;
+	var troop = req.body.troop;
+	var name = req.body.name;
+	
 	
 	console.log(user+' '+pw+' '+troop);
 	console.log('connection built');
-	su.signUp(user,pw,troop,name,function(){
-		res.sendStatus(200).send(new Buffer('complete'.trim()));
+	su.signUp(user,pw,troop,name,function(valid){
+		res.send(valid.toString());
 });
 });
 
 
-
+app.get('/',function(req,res)
+	   {
+	console.log('test test');
+	res.send('test test');
+});
 
 
 //로그인 포트 리스닝
 
 app.get('/SI',function(req, res){
-
+	console.log('got req');
 	var user = req.query.user.toString();
 	var pw = req.query.pw.toString();
-
-	console.log('got req');
+	console.log(user);
+	console.log(pw);
+	
 	
 	si.signIn(user,pw,function(qual,jsonObj){
+			console.log(qual);
 			if(qual)
 			{
 				console.log('sign in success');
 				console.log('we send '+jsonObj);
-				return res.send(jsonObj);
+				return res.status(200).json(jsonObj);
 			}
 
 			else
 			{
-				return res.send(null);
+				return res.send("false");
 				
 			}
 		});
@@ -70,25 +81,28 @@ app.get('/SI',function(req, res){
 
 
 
-app.get('/WS',function(req,res)
+app.post('/WS',function(req,res)
 {
-	var year = req.query.year.toString();
-	var month = req.query.month.toString();
-	var date = req.query.date.toString();
-	var troop = req.query.troop.toString();
-	var user = req.query.user.toString();
-	var time = req.query.time.toString();
-	var title = req.query.title.toString();
-	var desc = req.query.desc.toString();
+	var year = req.body.year.toString();
+	var month = req.body.month.toString();
+	var date = req.body.date.toString();
+	var troop = req.body.troop.toString();
+	var charge = req.body.charge.toString();
+	var time = req.body.time.toString();
+	var title = req.body.title.toString();
+	var desc = req.body.desc.toString();
+	var section = req.body.section.toString();
+	var writer = req.body.writer.toString();
+	var secret = req.body.secret.toString();
 	
 
-
-	ms.WriteScheduleTitle(year,month,date,troop,section,username,time,title,function(){
+	ms.writeScheduleTitle(year,month,date,troop,section,charge,time,title,writer,secret,function(){
 		
-		ms.WriteScheduleDesc(year,month,date,troop,section,description,function(){
+		ms.writeScheduleDesc(year,month,date,troop,section,desc,function(){
 		
-		return res.send(true);
-
+			gt.convertToWeekday(year,month,date,function(json){
+				res.send(json);
+			});
 		});
 	});	
 });
@@ -102,17 +116,20 @@ app.get('/WS',function(req,res)
 app.get('/RST',function(req,res)
 {
 	var year = req.query.year.toString();
-	var month = req.query.month.toString();
-	var date = req.query.date.toString();
+	var week = req.query.week.toString();
 	var troop = req.query.troop.toString();
 	
-	ms.readScehduleTitle(year,month,date,troop,function(jsonObj){
-		if(jsonObject === null)
+	console.log(year+week+troop);
+	
+	ms.readScheduleTitle(year,week,troop,function(jsonObj){
+		if(jsonObj === undefined)
 		{
+			console.log('send null');
 			return res.send(null);
 		}
 		else
 		{
+			console.log('send '+jsonObj);
 			return res.json(jsonObj);
 		}
 	});
@@ -127,11 +144,10 @@ app.get('/RST',function(req,res)
 app.get('/RSD',function(req,res)
 {
 	var year = req.query.year.toString();
-	var month = req.query.month.toString();
-	var date = req.query.date.toString();
+	var week = req.query.week.toString();
 	var troop = req.query.troop.toString();
 	
-	ms.readScehduleDesc(year,month,date,troop,function(jsonObj){
+	ms.readScheduleDesc(year,week,troop,function(jsonObj){
 		if(jsonObject === null)
 		{
 			return res.send(null);
@@ -150,12 +166,12 @@ app.get('/RSD',function(req,res)
 
 
 
-app.get('/SAu',function(req,res)
+app.post('/SAu',function(req,res)
 {
 	
-	var user = req.query.user;
-	var target = req.query.target;
-	var sec = req.query.sec;
+	var user = req.body.user;
+	var target = req.body.target;
+	var sec = req.body.sec;
 	
 	
 	
@@ -169,12 +185,12 @@ app.get('/SAu',function(req,res)
 //인사권 지정 리스닝
 
 
-app.get('/SAd',function(req,res)
+app.post('/SAd',function(req,res)
 {
 	
-	var user = req.query.user;
-	var target = req.query.target;
-	var value = req.query.value;
+	var user = req.body.user;
+	var target = req.body.target;
+	var value = req.body.value;
 	
 	sa.setAdmin(user,target,value,function(valid){
 		
@@ -209,17 +225,20 @@ app.get('/GMI',function(req,res)
 	});
 });
 
-app.get('SSL',function(req,res)
+app.post('/SSL',function(req,res)
 {
-	var user = req.query.user;
-	var secret = req.query.secret;
-	sa.setSecretLevel(user,secret,function(valid)
+	console.log('SSL running...');
+	var user = req.body.user;
+	var target = req.body.target;
+	var secret = req.body.secret;
+	sa.setSecretHandle(user,target,secret,function(valid)
 		{
-			return valid;
+			console.log('SSL finish');
+			res.send(valid);
 		});
 });
 
-app.listen(3000,function(){
+app.listen(5032,function(){
 	console.log('server on!');
 });
 

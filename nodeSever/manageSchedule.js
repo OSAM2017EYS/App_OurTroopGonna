@@ -57,7 +57,7 @@ function writeScheduleDesc(year,month,date,troop,section,description,callback)
 			fs.writeFileSync(fileName,JSON.stringify(newJsonObject));
 	}
 	
-		return callback();
+		return callback(true);
 
 	});
 }
@@ -108,7 +108,7 @@ function eraseSchedule(year,month,date,troop,section,callback){
 				console.log('no schedule to erase');	
 			}	
 			
-			return callback();
+			return callback(true);
 		});
 	
 	});
@@ -118,104 +118,122 @@ function eraseSchedule(year,month,date,troop,section,callback){
 }
 
 
-function writeScheduleTitle(year,month,date,troop,section,username,time,title,secret,callback)
+function writeScheduleTitle(year,month,date,troop,section,username,time,title,writer,secret,callback)
 {
 	//보좌관님의 주문을 한 번 반영해보자
 	//우리에게 필요한 건 기본적으로는 요약만 띄워주고 만약 요약을 클릭하면 세부사항을 보여주는 것이다.
-	var formattedString = ' * '+title+' / '+time+' / '+username;
+	var formattedString = ' * '+title+' / '+time+' / '+username+' / '+writer+' / '+secret;
 	var targetDir = './schedules/'+troop;
 	getTitleFileLoca(year,month,date,troop,function(fileName,momentDate)
 					{
-		if(fs.existsSync(targetDir)) //파일이 존재하는지 검사한다.
-	
+		if(!fs.existsSync(targetDir))
+			fs.mkdir(targetDir);
+		
+		console.log(targetDir+'/'+fileName);
+		if(fs.existsSync(fileName)) //파일이 존재하는지 검사한다.
 		{
-			//파일이 존재하며, 해당 파일에 지속적으로 작성한다.
-			
-			var jsonString = fs.readFileSync(fileName);
-			
-					
-			var jsonObject = JSON.parse(jsonString);
-			if(!jsonObject[section])//부서의 일정이 비어있는 것으로 초기화시킨다.
+				//파일이 존재하며, 해당 파일에 지속적으로 작성한다.
+		var jsonString = fs.readFileSync(fileName);
+			console.log('jsonString : '+jsonString);
+
+		var jsonObject = JSON.parse(jsonString);
+			console.log(jsonObject);
+			if(!jsonObject[section])//부서의 일정이 작성되어 있지 않다면 비어있는 것으로 초기화시킨다.
 			{
 				jsonObject[section]=['','','','','','',''];
 			}
+			console.log(jsonObject);
 			jsonObject[section][momentDate.day()] = ['',4];
 			jsonObject[section][momentDate.day()][0] = formattedString;
 			jsonObject[section][momentDate.day()][1] = secret;
+			console.log(JSON.stringify(jsonObject));
 			fs.writeFileSync(fileName,JSON.stringify(jsonObject));
 		}
+
+		
 		else
 		{
 			//파일이 존재하지 않으며, 새로 파일을 만들어 작성한다.
 			
 
-			fs.mkdir(targetDir);
+			
 			var newJsonString = '{}';
 			var newJsonObject = JSON.parse(newJsonString);
 		
 			newJsonObject[section]=['','','','','','',''];
 		
-			jsonObject[section][momentDate.day()] = ['',4];
-			jsonObject[section][momentDate.day()][0] = formattedString;
-			jsonObject[section][momentDate.day()][1] = secret;
+			console.log(newJsonObject);
+			console.log(momentDate.day());
+			newJsonObject[section][momentDate.day()] = ['',4];
+			newJsonObject[section][momentDate.day()][0] = formattedString;
+			newJsonObject[section][momentDate.day()][1] = secret;
 			fs.writeFileSync(fileName,JSON.stringify(newJsonObject));
 		}
 	
-		return callback();
+		return callback(true);
 
 	});
 	
 	
 }
 
-function readScheduleTitle(year,month,date,troop,callback)
+function readScheduleTitle(year,week,troop,callback)
 {
 	
 	var targetDir = './schedules/'+troop;
-	getTitleFileLoca(year,month,date,troop,function(fileName,momentDate){
-		if(fs.existsSync(targetDir)) //파일이 존재하는지 검사한다.
+	console.log(targetDir+year+week+'Title.json');
 	
+	
+	if(fs.existsSync(targetDir)) //파일이 존재하는지 검사한다.
+	{
+		if(fs.existsSync(targetDir+'/'+year+week+'Title.json'))
 		{
-			//파일이 존재하면 jsonObject로 반환
+	
+		//파일이 존재하면 jsonObject로 반환
+		
+			var fileName = targetDir+'/'+year+week+'Title.json';
 			var jsonString = fs.readFileSync(fileName);
-			
-					
+		
+			console.log(jsonString);
+
+		
 			var jsonObject = JSON.parse(jsonString);
+		
 			return callback(jsonObject);
 		}
-		else
-		{
-			//파일이 존재하지 않으면 null 반환
-			return callback(null);
-		}
+	}
+	else
+	{
+		console.log('null');
+		//파일이 존재하지 않으면 false 반환
+		return callback(false);
+	}
 	
 	
-	});
+	
 }
 
-function readScheduleDesc(year,month,date,troop,callback)
+function readScheduleDesc(year,week,troop,callback)
 {
-	
 	var targetDir = './schedules/'+troop;
-	getDescFileLoca(year,month,date,troop,function(fileName,momentDate){
-		if(fs.existsSync(targetDir)) //파일이 존재하는지 검사한다.
 	
+	if(fs.existsSync(targetDir)) //파일이 존재하는지 검사한다.
+	{
+		if(fs.existsSync(year+week+'Desc.json'))
 		{
-			//파일이 존재하면 jsonObject로 반환
-			var jsonString = fs.readFileSync(fileName);
-			
-					
-			var jsonObject = JSON.parse(jsonString);
-			return callback(jsonObject);
+		//파일이 존재하면 jsonObject로 반환
+		var jsonString = fs.readFileSync(fileName);
+
+
+		var jsonObject = JSON.parse(jsonString);
+		return callback(jsonObject);
 		}
-		else
-		{
-			//파일이 존재하지 않으면 null 반환
-			return callback(null);
-		}
-	
-	
-	});
+	}
+	else
+	{
+		//파일이 존재하지 않으면 false 반환
+		return callback(false);
+	}
 }
 
 

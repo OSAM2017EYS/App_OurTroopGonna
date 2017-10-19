@@ -19,14 +19,20 @@ function getDay(year,month,date,callback){
 }
 
 
-function convertToWeekday(m,callback)
+function convertToWeekday(year,month,date,callback)
 {
 	//moment객체의 포맷을 연도주차 로 변경하여 반환한다.
-	var year = m.year();
-	var week = m.week();
-	var day = m.day();
-	var converted = mo(year+'-'+week+'-'+day,'gggg-ww-e');
-	return callback(converted);
+	var original = mo(year+month+date,'YYYYMMDD');
+	
+	var Cyear = original.year();
+	var Cweek = original.week();
+	var Cday = original.day();
+	
+	var jsonString = '{ "year" : "'+Cyear+'" , "week" : "'+Cweek+'" , "day" : "'+Cday+'" }';
+	console.log(jsonString);
+	var jsonObj = JSON.parse(jsonString);
+	
+	return callback(jsonObj);
 }
 
 function toStringWeekday(m,callback)
